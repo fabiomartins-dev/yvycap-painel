@@ -31,7 +31,7 @@ const GRUPOS: GrupoNav[] = [
     ],
   },
   {
-    titulo: 'Parceria',
+    titulo: 'Painel do Parceiro',
     permissao: 'parceiro',
     itens: [
       { rotulo: 'Dashboard', href: '/parceria', exato: true },

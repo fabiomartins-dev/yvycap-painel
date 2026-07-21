@@ -19,7 +19,7 @@ export function ClienteDetalheScreen({ det }: { det: DetalheCliente }) {
         descricao={`${cliente.email} · ${cliente.telefone}`}
         migalhas={[
           { rotulo: 'Painel', href: '/' },
-          { rotulo: 'Parceria', href: '/parceria' },
+          { rotulo: 'Painel do Parceiro', href: '/parceria' },
           { rotulo: 'Clientes', href: '/parceria/clientes' },
           { rotulo: cliente.nome },
         ]}

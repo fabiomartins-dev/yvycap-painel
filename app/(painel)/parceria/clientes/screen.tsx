@@ -12,7 +12,7 @@ export function ClientesScreen({ clientes }: { clientes: Cliente[] }) {
         descricao="Sua carteira de clientes e o estágio de cada um no pipeline."
         migalhas={[
           { rotulo: 'Painel', href: '/' },
-          { rotulo: 'Parceria', href: '/parceria' },
+          { rotulo: 'Painel do Parceiro', href: '/parceria' },
           { rotulo: 'Clientes' },
         ]}
       />

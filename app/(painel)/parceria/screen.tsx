@@ -13,7 +13,7 @@ export function ParceriaScreen({ resumo }: { resumo: ResumoParceiro | null }) {
   if (!resumo) {
     return (
       <>
-        <PageHeader titulo="Painel do parceiro" migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria' }]} />
+        <PageHeader titulo="Painel do Parceiro" migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Painel do Parceiro' }]} />
         <Card padding="xl">
           <Text c="#66756e" ta="center" py="lg">
             Seu credenciamento como parceiro ainda não foi concluído. Fale com a equipe YVYCAP
@@ -27,9 +27,9 @@ export function ParceriaScreen({ resumo }: { resumo: ResumoParceiro | null }) {
   return (
     <>
       <PageHeader
-        titulo="Painel do parceiro"
+        titulo="Painel do Parceiro"
         descricao="Sua carteira de clientes, contratos originados e comissões."
-        migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria' }]}
+        migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Painel do Parceiro' }]}
       />
 
       <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }}>

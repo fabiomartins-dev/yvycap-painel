@@ -14,7 +14,7 @@ export function ResgatesParceriaScreen({ resgates }: { resgates: ResgateCarteira
         descricao="Solicitações de resgate antecipado dos clientes da sua carteira (aviso prévio de 90 dias)."
         migalhas={[
           { rotulo: 'Painel', href: '/' },
-          { rotulo: 'Parceria', href: '/parceria' },
+          { rotulo: 'Painel do Parceiro', href: '/parceria' },
           { rotulo: 'Resgates' },
         ]}
       />

@@ -15,7 +15,7 @@ export function ContratosParceriaScreen({ contratos }: { contratos: ContratoCart
         descricao="Todos os contratos originados por você, com o status de conciliação do aporte."
         migalhas={[
           { rotulo: 'Painel', href: '/' },
-          { rotulo: 'Parceria', href: '/parceria' },
+          { rotulo: 'Painel do Parceiro', href: '/parceria' },
           { rotulo: 'Contratos' },
         ]}
       />

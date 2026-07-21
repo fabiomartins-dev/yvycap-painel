@@ -59,7 +59,7 @@ export function HomeScreen({
               <Stack gap="md" h="100%">
                 <Group justify="space-between">
                   <Title order={3} fz="h4">
-                    Parceria
+                    Painel do Parceiro
                   </Title>
                   <ButtonLink href="/parceria" size="xs" variant="filled" color="brand.8">
                     Abrir seção

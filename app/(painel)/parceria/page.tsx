@@ -2,7 +2,7 @@ import { exigirPermissao } from '@/lib/auth-server';
 import { getResumoParceiro } from '@/services/parceria';
 import { ParceriaScreen } from './screen';
 
-export const metadata = { title: 'Parceria' };
+export const metadata = { title: 'Painel do Parceiro' };
 
 export default async function ParceriaPage() {
   const { sessao } = await exigirPermissao('parceiro');

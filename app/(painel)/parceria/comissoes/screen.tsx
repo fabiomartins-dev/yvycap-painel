@@ -20,7 +20,7 @@ export function ComissoesScreen({ extrato }: { extrato: ExtratoComissoes | null 
       <>
         <PageHeader
           titulo="Comissões"
-          migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria', href: '/parceria' }, { rotulo: 'Comissões' }]}
+          migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Painel do Parceiro', href: '/parceria' }, { rotulo: 'Comissões' }]}
         />
         <Card padding="xl">
           <Text c="#66756e" ta="center" py="lg">
@@ -37,7 +37,7 @@ export function ComissoesScreen({ extrato }: { extrato: ExtratoComissoes | null 
       <PageHeader
         titulo="Comissões"
         descricao="Extrato mês a mês: entrada (1%, retenção de 30 dias), recorrentes (1% a.m.) e estornos."
-        migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria', href: '/parceria' }, { rotulo: 'Comissões' }]}
+        migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Painel do Parceiro', href: '/parceria' }, { rotulo: 'Comissões' }]}
       />
 
       <SimpleGrid cols={{ base: 1, xs: 2 }} mb="md">

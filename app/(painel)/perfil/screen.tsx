@@ -23,6 +23,9 @@ export function PerfilScreen({
   investidor: Investidor | null;
   parceiro: Parceiro | null;
 }) {
+  const documento = investidor?.cpf ?? parceiro?.cnpjCpf ?? null;
+  const telefone = investidor?.telefone ?? parceiro?.telefone ?? null;
+
   return (
     <>
       <PageHeader
@@ -49,17 +52,17 @@ export function PerfilScreen({
                   <Table.Th>E-mail</Table.Th>
                   <Table.Td>{usuario.email}</Table.Td>
                 </Table.Tr>
-                {investidor && (
-                  <>
-                    <Table.Tr>
-                      <Table.Th>CPF/CNPJ</Table.Th>
-                      <Table.Td>{mascararDocumento(investidor.cpf)}</Table.Td>
-                    </Table.Tr>
-                    <Table.Tr>
-                      <Table.Th>Telefone</Table.Th>
-                      <Table.Td>{investidor.telefone}</Table.Td>
-                    </Table.Tr>
-                  </>
+                {documento && (
+                  <Table.Tr>
+                    <Table.Th>CPF/CNPJ</Table.Th>
+                    <Table.Td>{mascararDocumento(documento)}</Table.Td>
+                  </Table.Tr>
+                )}
+                {telefone && (
+                  <Table.Tr>
+                    <Table.Th>Telefone</Table.Th>
+                    <Table.Td>{telefone}</Table.Td>
+                  </Table.Tr>
                 )}
                 <Table.Tr>
                   <Table.Th>Usuário desde</Table.Th>

@@ -15,7 +15,7 @@ export function ContratoParceriaScreen({ contrato: c }: { contrato: ContratoCart
         descricao={`Cliente: ${c.clienteNome}`}
         migalhas={[
           { rotulo: 'Painel', href: '/' },
-          { rotulo: 'Parceria', href: '/parceria' },
+          { rotulo: 'Painel do Parceiro', href: '/parceria' },
           { rotulo: 'Contratos', href: '/parceria/contratos' },
           { rotulo: c.numero },
         ]}
