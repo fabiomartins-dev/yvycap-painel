@@ -1,21 +1,56 @@
 'use client';
 
-import { Card, Grid, Group, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
+import Link from 'next/link';
+import { Box, Button, Card, Grid, Group, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
 import { data, moeda, percentualMes } from '@/lib/format';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 import { BadgeStatus } from '@/components/BadgeStatus';
-import { BotaoResgate } from '@/components/investimentos/BotaoResgate';
 import { BotaoDownload } from '@/components/investimentos/BotaoDownload';
 import type { DetalheContrato } from '@/services/investimentos';
 
 const tipoRotulo = { carencia: 'Carência', juros: 'Juros mensais', vencimento: 'Vencimento' } as const;
 
+const tipoDocRotulo = { contrato_mutuo: 'Contrato de mútuo', comprovante: 'Comprovante de aporte' } as const;
+
 export function ContratoInvestidorScreen({ det }: { det: DetalheContrato }) {
-  const { contrato, cronograma, documentos, resgate } = det;
+  const { contrato, cronograma, documentos } = det;
+
+  const proximosPagamentos = cronograma
+    .filter((p) => p.status === 'previsto' && p.valor > 0)
+    .slice(0, 4);
 
   return (
     <>
+      <Button
+        component={Link}
+        href="/investimentos"
+        variant="subtle"
+        color="brand.7"
+        size="compact-sm"
+        mb="xs"
+        px={6}
+        ml={-6}
+        leftSection={
+          <svg
+            width="15"
+            height="15"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="m12 19-7-7 7-7" />
+            <path d="M19 12H5" />
+          </svg>
+        }
+        styles={{ section: { marginRight: 6 } }}
+      >
+        Voltar
+      </Button>
       <PageHeader
         titulo={`Contrato ${contrato.numero}`}
         descricao="Resumo, cronograma de pagamentos e documentos vinculados."
@@ -124,6 +159,33 @@ export function ContratoInvestidorScreen({ det }: { det: DetalheContrato }) {
 
             <Card>
               <Title order={3} fz="h4" mb="sm">
+                Próximos pagamentos
+              </Title>
+              {proximosPagamentos.length === 0 ? (
+                <Text fz="sm" c="#66756e">
+                  Não há pagamentos previstos. Contrato encerrado ou aguardando conciliação.
+                </Text>
+              ) : (
+                <Stack gap="xs">
+                  {proximosPagamentos.map((p) => (
+                    <Group key={p.mes} justify="space-between" wrap="nowrap">
+                      <Box>
+                        <Text fz="sm">{data(p.data)}</Text>
+                        <Text fz="xs" c="#66756e">
+                          {p.mes}º mês · {tipoRotulo[p.tipo]}
+                        </Text>
+                      </Box>
+                      <Text fz="sm" fw={p.tipo === 'vencimento' ? 700 : 600}>
+                        {moeda(p.valor)}
+                      </Text>
+                    </Group>
+                  ))}
+                </Stack>
+              )}
+            </Card>
+
+            <Card>
+              <Title order={3} fz="h4" mb="sm">
                 Documentos
               </Title>
               {documentos.length === 0 ? (
@@ -134,23 +196,18 @@ export function ContratoInvestidorScreen({ det }: { det: DetalheContrato }) {
                 <Stack gap="xs">
                   {documentos.map((d) => (
                     <Group key={d.id} justify="space-between" wrap="nowrap">
-                      <Text fz="sm" style={{ flex: 1 }}>
-                        {d.nome}
-                      </Text>
+                      <Box style={{ flex: 1 }}>
+                        <Text fz="sm">{d.nome}</Text>
+                        <Text fz="xs" c="#66756e">
+                          {tipoDocRotulo[d.tipo]} · {data(d.data)}
+                        </Text>
+                      </Box>
                       <BotaoDownload nome={d.nome} />
                     </Group>
                   ))}
                 </Stack>
               )}
             </Card>
-
-            {contrato.status !== 'encerrado' && (
-              <BotaoResgate
-                contratoId={contrato.id}
-                contratoNumero={contrato.numero}
-                resgateExistente={resgate}
-              />
-            )}
           </Stack>
         </Grid.Col>
       </Grid>

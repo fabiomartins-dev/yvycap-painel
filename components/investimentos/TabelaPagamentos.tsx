@@ -1,15 +1,19 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Card, Group, SegmentedControl, Select, Table, Text } from '@mantine/core';
+import { Card, Divider, Group, Modal, SegmentedControl, Select, Stack, Table, Text } from '@mantine/core';
 import { BadgeStatus } from '@/components/BadgeStatus';
+import { BotaoDownload } from '@/components/investimentos/BotaoDownload';
 import { data, moeda } from '@/lib/format';
 import type { PagamentoInvestidor } from '@/services/investimentos';
+
+const tipoRotulo = (p: PagamentoInvestidor) => (p.tipo === 'vencimento' ? 'Vencimento' : 'Juros mensais');
 
 export function TabelaPagamentos({ pagamentos }: { pagamentos: PagamentoInvestidor[] }) {
   const [contrato, setContrato] = useState<string | null>(null);
   const [status, setStatus] = useState('todos');
   const [periodo, setPeriodo] = useState<string | null>('todos');
+  const [detalhe, setDetalhe] = useState<PagamentoInvestidor | null>(null);
 
   const contratos = useMemo(
     () => [...new Set(pagamentos.map((p) => p.contratoNumero))].map((n) => ({ value: n, label: n })),
@@ -87,11 +91,15 @@ export function TabelaPagamentos({ pagamentos }: { pagamentos: PagamentoInvestid
             </Table.Thead>
             <Table.Tbody>
               {filtrados.map((p) => (
-                <Table.Tr key={`${p.contratoId}-${p.mes}`}>
+                <Table.Tr
+                  key={`${p.contratoId}-${p.mes}`}
+                  onClick={() => setDetalhe(p)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <Table.Td>{data(p.data)}</Table.Td>
                   <Table.Td fw={600}>{p.contratoNumero}</Table.Td>
                   <Table.Td>{p.mes}º</Table.Td>
-                  <Table.Td>{p.tipo === 'vencimento' ? 'Vencimento' : 'Juros mensais'}</Table.Td>
+                  <Table.Td>{tipoRotulo(p)}</Table.Td>
                   <Table.Td fw={p.tipo === 'vencimento' ? 700 : undefined}>{moeda(p.valor)}</Table.Td>
                   <Table.Td>
                     <BadgeStatus status={p.status} />
@@ -102,6 +110,72 @@ export function TabelaPagamentos({ pagamentos }: { pagamentos: PagamentoInvestid
           </Table>
         </Table.ScrollContainer>
       )}
+
+      <Modal
+        opened={!!detalhe}
+        onClose={() => setDetalhe(null)}
+        title={detalhe ? `Pagamento ${detalhe.contratoNumero} — ${detalhe.mes}º mês` : ''}
+        centered
+      >
+        {detalhe && (
+          <Stack gap="md">
+            <Stack gap={6} fz="sm">
+              <Group justify="space-between">
+                <Text c="#66756e">Contrato</Text>
+                <Text fw={600}>{detalhe.contratoNumero}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text c="#66756e">Parcela</Text>
+                <Text>{detalhe.mes}º mês</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text c="#66756e">Tipo</Text>
+                <Text>{tipoRotulo(detalhe)}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text c="#66756e">Data prevista</Text>
+                <Text>{data(detalhe.data)}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text c="#66756e">Valor</Text>
+                <Text fw={700}>{moeda(detalhe.valor)}</Text>
+              </Group>
+              <Group justify="space-between">
+                <Text c="#66756e">Status</Text>
+                <BadgeStatus status={detalhe.status} />
+              </Group>
+            </Stack>
+
+            <Divider label="Comprovante de transferência" labelPosition="left" />
+
+            {detalhe.comprovante ? (
+              <Stack gap={6} fz="sm">
+                <Group justify="space-between">
+                  <Text c="#66756e">Identificador</Text>
+                  <Text>{detalhe.comprovante.identificador}</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text c="#66756e">Meio</Text>
+                  <Text>{detalhe.comprovante.meio}</Text>
+                </Group>
+                <Group justify="space-between">
+                  <Text c="#66756e">Efetivado em</Text>
+                  <Text>{data(detalhe.comprovante.efetivadoEm)}</Text>
+                </Group>
+                <Group justify="space-between" wrap="nowrap" mt={4}>
+                  <Text style={{ flex: 1 }}>{detalhe.comprovante.arquivo}</Text>
+                  <BotaoDownload nome={detalhe.comprovante.arquivo} />
+                </Group>
+              </Stack>
+            ) : (
+              <Text fz="sm" c="#66756e">
+                Pagamento ainda previsto. O comprovante de transferência ficará disponível aqui após
+                a efetivação pela YVYCAP.
+              </Text>
+            )}
+          </Stack>
+        )}
+      </Modal>
     </Card>
   );
 }

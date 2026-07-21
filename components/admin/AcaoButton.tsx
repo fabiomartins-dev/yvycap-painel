@@ -44,7 +44,7 @@ export function AcaoButton({
   }
 
   return (
-    <Button size="compact-xs" variant="light" color="brand.8" loading={pendente} onClick={clique} {...props}>
+    <Button size="compact-xs" variant="filled" color="brand.8" loading={pendente} onClick={clique} {...props}>
       {rotulo}
     </Button>
   );

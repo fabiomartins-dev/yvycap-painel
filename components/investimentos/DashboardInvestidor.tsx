@@ -1,36 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { Anchor, Box, Card, Group, Table, Text, Title } from '@mantine/core';
-import { BarChart } from '@mantine/charts';
+import { Anchor, Button, Card, Table, Text, Title } from '@mantine/core';
 import { BadgeStatus } from '@/components/BadgeStatus';
 import { data, moeda, percentualMes } from '@/lib/format';
 import type { ContratoInvestidor } from '@/services/investimentos';
-import type { Parcela } from '@/lib/calc';
 
-export interface CronogramaPorContrato {
-  [contratoId: string]: Parcela[];
-}
-
-export function DashboardInvestidor({
-  contratos,
-  cronogramas,
-}: {
-  contratos: ContratoInvestidor[];
-  cronogramas: CronogramaPorContrato;
-}) {
-  const [selecionado, setSelecionado] = useState(contratos[0]?.id ?? null);
-  const atual = contratos.find((c) => c.id === selecionado) ?? null;
-  const cronograma = selecionado ? (cronogramas[selecionado] ?? []) : [];
-
-  const dadosGrafico = cronograma.map((p) => ({
-    mes: `M${p.mes}`,
-    Carência: p.tipo === 'carencia' ? p.jurosDoMes : 0,
-    'Juros mensais': p.tipo === 'juros' ? p.valor : 0,
-    Vencimento: p.tipo === 'vencimento' ? p.valor : 0,
-  }));
-
+export function DashboardInvestidor({ contratos }: { contratos: ContratoInvestidor[] }) {
   return (
     <>
       <Card mt="md">
@@ -48,19 +24,12 @@ export function DashboardInvestidor({
                 <Table.Th>Início</Table.Th>
                 <Table.Th>Vencimento</Table.Th>
                 <Table.Th>Status</Table.Th>
+                <Table.Th />
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
               {contratos.map((c) => (
-                <Table.Tr
-                  key={c.id}
-                  onClick={() => setSelecionado(c.id)}
-                  style={{
-                    cursor: 'pointer',
-                    backgroundColor: c.id === selecionado ? 'rgba(200,164,94,0.12)' : undefined,
-                  }}
-                  aria-selected={c.id === selecionado}
-                >
+                <Table.Tr key={c.id}>
                   <Table.Td>
                     <Anchor component={Link} href={`/investimentos/contratos/${c.id}`} fw={600} c="#124534">
                       {c.numero}
@@ -74,50 +43,44 @@ export function DashboardInvestidor({
                   <Table.Td>
                     <BadgeStatus status={c.statusRotulo} />
                   </Table.Td>
+                  <Table.Td>
+                    <Button
+                      component={Link}
+                      href={`/investimentos/contratos/${c.id}`}
+                      size="compact-sm"
+                      variant="filled"
+                      color="brand.7"
+                      c="white"
+                      rightSection={
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M5 12h14" />
+                          <path d="m12 5 7 7-7 7" />
+                        </svg>
+                      }
+                    >
+                      Ver detalhe
+                    </Button>
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
           </Table>
         </Table.ScrollContainer>
         <Text fz="xs" c="#66756e" mt={4}>
-          Selecione uma linha para ver o fluxo de pagamentos do contrato. Clique no número para
-          abrir o detalhe.
+          Clique em “Ver detalhe” para abrir a tela completa do contrato, com cronograma e
+          documentos.
         </Text>
       </Card>
-
-      {atual && (
-        <Card mt="md">
-          <Group justify="space-between" mb="xs">
-            <Title order={3} fz="h4">
-              Fluxo de pagamentos — {atual.numero}
-            </Title>
-            <Text fz="sm" c="#66756e">
-              {moeda(atual.jurosMensal)}/mês a partir do 7º mês
-            </Text>
-          </Group>
-          <Text fz="xs" c="#66756e" mb="md">
-            Meses 1–6 (carência): os juros acumulam e são pagos no vencimento junto com o
-            principal. Meses 7–36: pagamento mensal dos juros. Mês 36: principal + juros da
-            carência + último juro.
-          </Text>
-          <Box>
-            <BarChart
-              h={280}
-              data={dadosGrafico}
-              dataKey="mes"
-              type="stacked"
-              series={[
-                { name: 'Carência', color: '#dbba76' },
-                { name: 'Juros mensais', color: '#1b5c46' },
-                { name: 'Vencimento', color: '#c8a45e' },
-              ]}
-              valueFormatter={(v) => moeda(v)}
-              withLegend
-              tickLine="none"
-            />
-          </Box>
-        </Card>
-      )}
     </>
   );
 }

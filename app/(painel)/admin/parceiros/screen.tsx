@@ -59,7 +59,7 @@ export function ParceirosScreen({ parceiros }: { parceiros: ParceiroResumo[] }) 
                     <Table.Td>{moeda(p.saldoAtivoCarteira)}</Table.Td>
                     <Table.Td>{data(p.criadoEm)}</Table.Td>
                     <Table.Td>
-                      <Badge size="xs" variant="light" color={p.ativo ? 'brand.7' : 'red'}>
+                      <Badge size="xs" variant="filled" color={p.ativo ? 'brand.7' : 'red'}>
                         {p.ativo ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </Table.Td>

@@ -22,7 +22,7 @@ export function rotuloEstagio(estagio: string): string {
 
 export function BadgeEstagio({ estagio }: { estagio: string }) {
   return (
-    <Badge color={COR_ESTAGIO[estagio] ?? 'gray'} variant="light" size="sm">
+    <Badge color={COR_ESTAGIO[estagio] ?? 'gray'} variant="filled" size="sm">
       {rotuloEstagio(estagio)}
     </Badge>
   );

@@ -51,7 +51,7 @@ export function InvestidoresScreen({ investidores }: { investidores: InvestidorA
                   <Table.Td>{i.contratos}</Table.Td>
                   <Table.Td>{moeda(i.totalAportado)}</Table.Td>
                   <Table.Td>
-                    <Badge size="xs" variant="light" color={i.cadastroAprovado ? 'brand.7' : 'orange'}>
+                    <Badge size="xs" variant="filled" color={i.cadastroAprovado ? 'brand.7' : 'orange'}>
                       {i.cadastroAprovado ? 'Aprovado' : 'Em análise'}
                     </Badge>
                   </Table.Td>
@@ -61,7 +61,7 @@ export function InvestidoresScreen({ investidores }: { investidores: InvestidorA
                         {i.pendenteConciliacao} pendente{i.pendenteConciliacao > 1 ? 's' : ''}
                       </Badge>
                     ) : (
-                      <Badge size="xs" variant="light" color="brand.7">
+                      <Badge size="xs" variant="filled" color="brand.7">
                         Em dia
                       </Badge>
                     )}

@@ -45,7 +45,7 @@ export function InvestidorDetalheScreen({ det }: { det: DetalheInvestidorAdmin }
                 <Table.Tr>
                   <Table.Th w={150}>Situação</Table.Th>
                   <Table.Td>
-                    <Badge size="xs" variant="light" color={investidor.cadastroAprovado ? 'brand.7' : 'orange'}>
+                    <Badge size="xs" variant="filled" color={investidor.cadastroAprovado ? 'brand.7' : 'orange'}>
                       {investidor.cadastroAprovado ? 'Aprovado' : 'Em análise'}
                     </Badge>
                   </Table.Td>

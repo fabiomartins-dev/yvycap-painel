@@ -40,6 +40,13 @@ export interface ResumoInvestidor {
   contratos: ContratoInvestidor[];
 }
 
+export interface ComprovantePagamento {
+  identificador: string;
+  meio: 'PIX' | 'TED';
+  efetivadoEm: string;
+  arquivo: string;
+}
+
 export interface PagamentoInvestidor {
   contratoId: string;
   contratoNumero: string;
@@ -49,6 +56,7 @@ export interface PagamentoInvestidor {
   valor: number;
   status: 'pago' | 'previsto';
   descricao: string;
+  comprovante: ComprovantePagamento | null;
 }
 
 export interface DetalheContrato {
@@ -135,6 +143,15 @@ export async function getPagamentosInvestidor(userId: string): Promise<Pagamento
           valor: p.valor,
           status: p.status,
           descricao: p.descricao,
+          comprovante:
+            p.status === 'pago'
+              ? {
+                  identificador: `${c.numero}-M${String(p.mes).padStart(2, '0')}`,
+                  meio: (p.mes % 2 === 0 ? 'TED' : 'PIX') as 'PIX' | 'TED',
+                  efetivadoEm: p.data,
+                  arquivo: `Comprovante ${c.numero} - ${p.mes}o mes.pdf`,
+                }
+              : null,
         }))
     )
     .sort((a, b) => a.data.localeCompare(b.data));

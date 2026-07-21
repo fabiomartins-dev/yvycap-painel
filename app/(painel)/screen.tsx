@@ -35,7 +35,7 @@ export function HomeScreen({
                   <Title order={3} fz="h4">
                     Meus Investimentos
                   </Title>
-                  <ButtonLink href="/investimentos" size="xs" variant="light" color="brand.8">
+                  <ButtonLink href="/investimentos" size="xs" variant="filled" color="brand.8">
                     Abrir seção
                   </ButtonLink>
                 </Group>
@@ -61,7 +61,7 @@ export function HomeScreen({
                   <Title order={3} fz="h4">
                     Parceria
                   </Title>
-                  <ButtonLink href="/parceria" size="xs" variant="light" color="brand.8">
+                  <ButtonLink href="/parceria" size="xs" variant="filled" color="brand.8">
                     Abrir seção
                   </ButtonLink>
                 </Group>
@@ -83,7 +83,7 @@ export function HomeScreen({
                   <Title order={3} fz="h4">
                     Administração
                   </Title>
-                  <ButtonLink href="/admin" size="xs" variant="light" color="brand.8">
+                  <ButtonLink href="/admin" size="xs" variant="filled" color="brand.8">
                     Abrir seção
                   </ButtonLink>
                 </Group>

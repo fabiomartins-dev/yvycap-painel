@@ -25,7 +25,7 @@ export function SolicitarAlteracao() {
 
   return (
     <>
-      <Button variant="light" color="brand.8" size="xs" onClick={() => setAberto(true)}>
+      <Button variant="filled" color="brand.8" size="xs" onClick={() => setAberto(true)}>
         Solicitar alteração de dados
       </Button>
       <Modal opened={aberto} onClose={() => setAberto(false)} title="Solicitar alteração de dados" centered>

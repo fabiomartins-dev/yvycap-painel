@@ -41,7 +41,7 @@ export function ParceiroDetalheScreen({ det }: { det: DetalheParceiroAdmin }) {
                 <Table.Tr>
                   <Table.Th w={140}>Situação</Table.Th>
                   <Table.Td>
-                    <Badge size="xs" variant="light" color={parceiro.ativo ? 'brand.7' : 'red'}>
+                    <Badge size="xs" variant="filled" color={parceiro.ativo ? 'brand.7' : 'red'}>
                       {parceiro.ativo ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </Table.Td>

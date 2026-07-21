@@ -26,7 +26,7 @@ const GRUPOS: GrupoNav[] = [
     titulo: 'Meus Investimentos',
     permissao: 'investidor',
     itens: [
-      { rotulo: 'Dashboard', href: '/investimentos', exato: true },
+      { rotulo: 'Meus investimentos', href: '/investimentos', exato: true },
       { rotulo: 'Pagamentos', href: '/investimentos/pagamentos' },
     ],
   },
@@ -127,15 +127,6 @@ export function PainelShell({
 
       <AppShell.Navbar p="md">
         <Stack gap="lg">
-          <NavLink
-            component={Link}
-            href="/"
-            label="Visão geral"
-            active={pathname === '/'}
-            color="brand.8"
-            onClick={close}
-            style={{ borderRadius: 8 }}
-          />
           {grupos.map((g) => (
             <Box key={g.titulo}>
               <Text fz="xs" fw={700} c="#66756e" tt="uppercase" mb={4} style={{ letterSpacing: '0.08em' }}>
@@ -148,7 +139,8 @@ export function PainelShell({
                   href={item.href}
                   label={item.rotulo}
                   active={ativo(item)}
-                  color="brand.8"
+                  variant={ativo(item) ? 'filled' : 'subtle'}
+                  color="brand.9"
                   onClick={close}
                   style={{ borderRadius: 8 }}
                 />
@@ -164,7 +156,8 @@ export function PainelShell({
               href="/perfil"
               label="Perfil"
               active={pathname.startsWith('/perfil')}
-              color="brand.8"
+              variant={pathname.startsWith('/perfil') ? 'filled' : 'subtle'}
+              color="brand.9"
               onClick={close}
               style={{ borderRadius: 8 }}
             />

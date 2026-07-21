@@ -27,7 +27,7 @@ const ROTULOS: Record<string, string> = {
 
 export function BadgeStatus({ status }: { status: string }) {
   return (
-    <Badge color={CORES[status] ?? 'gray'} variant="light" size="sm">
+    <Badge color={CORES[status] ?? 'gray'} variant="filled" size="sm">
       {ROTULOS[status] ?? status}
     </Badge>
   );

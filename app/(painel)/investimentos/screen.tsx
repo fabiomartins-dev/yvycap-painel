@@ -4,21 +4,15 @@ import { Card, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { data, moeda } from '@/lib/format';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
-import { DashboardInvestidor, type CronogramaPorContrato } from '@/components/investimentos/DashboardInvestidor';
+import { DashboardInvestidor } from '@/components/investimentos/DashboardInvestidor';
 import type { ResumoInvestidor } from '@/services/investimentos';
 
-export function InvestimentosScreen({
-  resumo,
-  cronogramas,
-}: {
-  resumo: ResumoInvestidor;
-  cronogramas: CronogramaPorContrato;
-}) {
+export function InvestimentosScreen({ resumo }: { resumo: ResumoInvestidor }) {
   return (
     <>
       <PageHeader
         titulo="Meus Investimentos"
-        descricao="Acompanhe seus contratos de mútuo, valores aportados e pagamentos."
+        descricao="Acompanhe seus contratos, valores aportados e pagamentos."
         migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Meus Investimentos' }]}
       />
 
@@ -51,7 +45,7 @@ export function InvestimentosScreen({
             />
             <StatCard rotulo="Total já recebido" valor={moeda(resumo.totalRecebido)} />
           </SimpleGrid>
-          <DashboardInvestidor contratos={resumo.contratos} cronogramas={cronogramas} />
+          <DashboardInvestidor contratos={resumo.contratos} />
         </>
       )}
     </>

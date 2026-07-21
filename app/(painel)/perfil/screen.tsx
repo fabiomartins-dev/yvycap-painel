@@ -78,7 +78,7 @@ export function PerfilScreen({
               </Title>
               <Group gap="xs" mb="sm">
                 {permissoes.map((p) => (
-                  <Badge key={p} variant="light" color="brand.8">
+                  <Badge key={p} variant="filled" color="brand.8">
                     {ROTULO_PERMISSAO[p]}
                   </Badge>
                 ))}

@@ -44,6 +44,7 @@ export const theme = createTheme({
   colors: { brand, gold },
   primaryColor: 'gold',
   primaryShade: 5,
+  autoContrast: true,
   black: tokens.texto,
   defaultRadius: 'md',
   fontFamily: 'var(--font-inter), Inter, sans-serif',
@@ -61,8 +62,8 @@ export const theme = createTheme({
     Paper: {
       styles: { root: { backgroundColor: tokens.card, borderColor: tokens.borda } },
     },
+    Badge: { defaultProps: { color: 'white', radius: 'sm'} },
     Button: { defaultProps: { radius: 'md' } },
-    Badge: { defaultProps: { radius: 'sm' } },
     Modal: { styles: { content: { backgroundColor: tokens.card } } },
   },
 });

@@ -7,7 +7,7 @@ export function BotaoDownload({ nome }: { nome: string }) {
   return (
     <Button
       size="compact-xs"
-      variant="light"
+      variant="filled"
       color="brand.8"
       onClick={() =>
         notifications.show({
