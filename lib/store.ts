@@ -1,0 +1,430 @@
+// Armazenamento em memória (mock) — persiste durante a sessão do servidor.
+// Toda leitura/escrita passa pela camada services/*, nunca direto das telas.
+
+import type {
+  Cliente,
+  Contrato,
+  Documento,
+  Investidor,
+  Parceiro,
+  SolicitacaoAlteracaoCadastro,
+  SolicitacaoResgate,
+  Usuario,
+} from './types';
+
+export interface Db {
+  usuarios: Usuario[];
+  parceiros: Parceiro[];
+  investidores: Investidor[];
+  contratos: Contrato[];
+  clientes: Cliente[];
+  resgates: SolicitacaoResgate[];
+  documentos: Documento[];
+  alteracoesCadastro: SolicitacaoAlteracaoCadastro[];
+  seq: { contrato: number; parceiro: number; usuario: number; resgate: number; investidor: number };
+}
+
+function fixtures(): Db {
+  const usuarios: Usuario[] = [
+    {
+      id: 'u-inv',
+      nome: 'Ricardo Almeida',
+      email: 'investidor@teste.com',
+      senha: 'yvycap2026',
+      permissoes: ['investidor'],
+      ativo: true,
+      termosAceitosEm: null,
+      criadoEm: '2026-01-10',
+    },
+    {
+      id: 'u-par',
+      nome: 'Marina Costa',
+      email: 'parceiro@teste.com',
+      senha: 'yvycap2026',
+      permissoes: ['parceiro'],
+      ativo: true,
+      termosAceitosEm: null,
+      criadoEm: '2025-12-01',
+    },
+    {
+      id: 'u-both',
+      nome: 'Paulo Ferreira',
+      email: 'investidor.parceiro@teste.com',
+      senha: 'yvycap2026',
+      permissoes: ['investidor', 'parceiro'],
+      ativo: true,
+      termosAceitosEm: null,
+      criadoEm: '2025-12-15',
+    },
+    {
+      id: 'u-adm',
+      nome: 'Equipe YVYCAP',
+      email: 'admin@teste.com',
+      senha: 'yvycap2026',
+      permissoes: ['admin'],
+      ativo: true,
+      termosAceitosEm: '2026-01-02',
+      criadoEm: '2025-11-01',
+    },
+  ];
+
+  const parceiros: Parceiro[] = [
+    {
+      id: 'p-1',
+      usuarioId: 'u-par',
+      nome: 'Marina Costa',
+      razaoSocial: 'Costa Capital Assessoria Ltda',
+      cnpjCpf: '48.123.456/0001-09',
+      email: 'parceiro@teste.com',
+      telefone: '(11) 98888-1001',
+      banco: 'Itaú (341)',
+      agencia: '0912',
+      conta: '45210-7',
+      chavePix: '48.123.456/0001-09',
+      ativo: true,
+      criadoEm: '2025-12-01',
+    },
+    {
+      id: 'p-2',
+      usuarioId: 'u-both',
+      nome: 'Paulo Ferreira',
+      razaoSocial: 'PF Consultoria de Investimentos ME',
+      cnpjCpf: '52.987.654/0001-31',
+      email: 'investidor.parceiro@teste.com',
+      telefone: '(11) 97777-2002',
+      banco: 'Bradesco (237)',
+      agencia: '1560',
+      conta: '30988-2',
+      chavePix: 'paulo@pfconsultoria.com.br',
+      ativo: true,
+      criadoEm: '2025-12-15',
+    },
+  ];
+
+  const investidores: Investidor[] = [
+    {
+      id: 'inv-1',
+      usuarioId: 'u-inv',
+      nome: 'Ricardo Almeida',
+      email: 'investidor@teste.com',
+      cpf: '412.556.789-04',
+      telefone: '(11) 96666-3003',
+      parceiroId: 'p-1',
+      cadastroAprovado: true,
+      criadoEm: '2026-01-08',
+    },
+    {
+      id: 'inv-2',
+      usuarioId: null,
+      nome: 'Helena Martins',
+      email: 'helena.martins@example.com',
+      cpf: '318.204.567-88',
+      telefone: '(11) 95555-4004',
+      parceiroId: 'p-1',
+      cadastroAprovado: true,
+      criadoEm: '2026-02-10',
+    },
+    {
+      id: 'inv-3',
+      usuarioId: null,
+      nome: 'Grupo Aratu Participações',
+      email: 'financeiro@grupoaratu.com.br',
+      cpf: '33.410.870/0001-55',
+      telefone: '(11) 94444-5005',
+      parceiroId: 'p-1',
+      cadastroAprovado: true,
+      criadoEm: '2025-12-28',
+    },
+    {
+      id: 'inv-4',
+      usuarioId: 'u-both',
+      nome: 'Paulo Ferreira',
+      email: 'investidor.parceiro@teste.com',
+      cpf: '287.331.940-12',
+      telefone: '(11) 97777-2002',
+      parceiroId: null,
+      cadastroAprovado: true,
+      criadoEm: '2026-02-20',
+    },
+    {
+      id: 'inv-5',
+      usuarioId: null,
+      nome: 'Sofia Lima',
+      email: 'sofia.lima@example.com',
+      cpf: '405.118.263-70',
+      telefone: '(21) 93333-6006',
+      parceiroId: 'p-2',
+      cadastroAprovado: true,
+      criadoEm: '2026-07-01',
+    },
+    {
+      id: 'inv-6',
+      usuarioId: null,
+      nome: 'Otávio Ramos',
+      email: 'otavio.ramos@example.com',
+      cpf: '509.772.184-30',
+      telefone: '(31) 92222-7007',
+      parceiroId: 'p-2',
+      cadastroAprovado: false,
+      criadoEm: '2026-07-15',
+    },
+  ];
+
+  // Fase 1 — 3% a.m. Contratos anteriores à abertura oficial correspondem a
+  // compromissos antecipados conciliados no mock, para demonstrar todos os estados.
+  const contratos: Contrato[] = [
+    {
+      id: 'c-1',
+      numero: 'CTR-0001',
+      investidorId: 'inv-1',
+      parceiroId: 'p-1',
+      fase: 1,
+      valorAporte: 100_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-01-15',
+      conciliado: true,
+      dataConciliacao: '2026-01-15',
+      estornado: false,
+      encerradoEm: null,
+      amortizacoes: [],
+    },
+    {
+      id: 'c-2',
+      numero: 'CTR-0002',
+      investidorId: 'inv-1',
+      parceiroId: 'p-1',
+      fase: 1,
+      valorAporte: 150_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-04-10',
+      conciliado: true,
+      dataConciliacao: '2026-04-11',
+      estornado: false,
+      encerradoEm: null,
+      amortizacoes: [],
+    },
+    {
+      id: 'c-3',
+      numero: 'CTR-0003',
+      investidorId: 'inv-2',
+      parceiroId: 'p-1',
+      fase: 1,
+      valorAporte: 250_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-02-20',
+      conciliado: true,
+      dataConciliacao: '2026-02-20',
+      estornado: false,
+      encerradoEm: null,
+      amortizacoes: [],
+    },
+    {
+      id: 'c-4',
+      numero: 'CTR-0004',
+      investidorId: 'inv-3',
+      parceiroId: 'p-1',
+      fase: 1,
+      valorAporte: 500_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-01-05',
+      conciliado: true,
+      dataConciliacao: '2026-01-06',
+      estornado: false,
+      encerradoEm: null,
+      amortizacoes: [],
+    },
+    {
+      id: 'c-5',
+      numero: 'CTR-0005',
+      investidorId: 'inv-5',
+      parceiroId: 'p-2',
+      fase: 1,
+      valorAporte: 300_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-07-18',
+      conciliado: false,
+      dataConciliacao: null,
+      estornado: false,
+      encerradoEm: null,
+      amortizacoes: [],
+    },
+    {
+      id: 'c-6',
+      numero: 'CTR-0006',
+      investidorId: 'inv-4',
+      parceiroId: null,
+      fase: 1,
+      valorAporte: 200_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-03-01',
+      conciliado: true,
+      dataConciliacao: '2026-03-02',
+      estornado: false,
+      encerradoEm: null,
+      amortizacoes: [],
+    },
+    {
+      id: 'c-7',
+      numero: 'CTR-0007',
+      investidorId: 'inv-2',
+      parceiroId: 'p-1',
+      fase: 1,
+      valorAporte: 120_000,
+      taxaMensal: 0.03,
+      dataInicio: '2026-03-15',
+      conciliado: true,
+      dataConciliacao: '2026-03-15',
+      estornado: true,
+      encerradoEm: '2026-04-02',
+      amortizacoes: [],
+    },
+  ];
+
+  const clientes: Cliente[] = [
+    {
+      id: 'cl-1',
+      parceiroId: 'p-1',
+      investidorId: 'inv-1',
+      nome: 'Ricardo Almeida',
+      email: 'investidor@teste.com',
+      telefone: '(11) 96666-3003',
+      estagio: 'aporte_conciliado',
+      interacoes: [
+        { data: '2025-12-10', descricao: 'Indicação de rede de contatos; primeiro contato por telefone.' },
+        { data: '2026-01-05', descricao: 'Apresentação da operação e das condições da Fase 1.' },
+        { data: '2026-01-12', descricao: 'Documentação recebida e validada.' },
+        { data: '2026-01-15', descricao: 'Contrato CTR-0001 assinado; aporte conciliado.' },
+      ],
+      criadoEm: '2025-12-10',
+    },
+    {
+      id: 'cl-2',
+      parceiroId: 'p-1',
+      investidorId: 'inv-2',
+      nome: 'Helena Martins',
+      email: 'helena.martins@example.com',
+      telefone: '(11) 95555-4004',
+      estagio: 'aporte_conciliado',
+      interacoes: [
+        { data: '2026-01-20', descricao: 'Reunião de apresentação em São Paulo.' },
+        { data: '2026-02-18', descricao: 'Contrato CTR-0003 assinado.' },
+        { data: '2026-02-20', descricao: 'Aporte de R$ 250 mil conciliado.' },
+      ],
+      criadoEm: '2026-01-20',
+    },
+    {
+      id: 'cl-3',
+      parceiroId: 'p-1',
+      investidorId: 'inv-3',
+      nome: 'Grupo Aratu Participações',
+      email: 'financeiro@grupoaratu.com.br',
+      telefone: '(11) 94444-5005',
+      estagio: 'aporte_conciliado',
+      interacoes: [
+        { data: '2025-12-05', descricao: 'Contato com o diretor financeiro; interesse em alocação relevante.' },
+        { data: '2026-01-05', descricao: 'Contrato CTR-0004 (R$ 500 mil) assinado e conciliado.' },
+      ],
+      criadoEm: '2025-12-05',
+    },
+    {
+      id: 'cl-4',
+      parceiroId: 'p-1',
+      investidorId: null,
+      nome: 'Beatriz Nogueira',
+      email: 'beatriz.nogueira@example.com',
+      telefone: '(11) 91111-8008',
+      estagio: 'documentacao',
+      interacoes: [
+        { data: '2026-06-25', descricao: 'Qualificada — patrimônio compatível com o aporte mínimo.' },
+        { data: '2026-07-08', descricao: 'Apresentação realizada; enviou documentação parcial.' },
+      ],
+      criadoEm: '2026-06-20',
+    },
+    {
+      id: 'cl-5',
+      parceiroId: 'p-1',
+      investidorId: null,
+      nome: 'André Sales',
+      email: 'andre.sales@example.com',
+      telefone: '(19) 90000-9009',
+      estagio: 'qualificado',
+      interacoes: [{ data: '2026-07-14', descricao: 'Primeira conversa; pediu material da Fase 1.' }],
+      criadoEm: '2026-07-12',
+    },
+    {
+      id: 'cl-6',
+      parceiroId: 'p-2',
+      investidorId: 'inv-5',
+      nome: 'Sofia Lima',
+      email: 'sofia.lima@example.com',
+      telefone: '(21) 93333-6006',
+      estagio: 'contrato_assinado',
+      interacoes: [
+        { data: '2026-07-02', descricao: 'Apresentação por videoconferência.' },
+        { data: '2026-07-18', descricao: 'Contrato CTR-0005 assinado; aguardando conciliação do aporte.' },
+      ],
+      criadoEm: '2026-07-01',
+    },
+    {
+      id: 'cl-7',
+      parceiroId: 'p-2',
+      investidorId: 'inv-6',
+      nome: 'Otávio Ramos',
+      email: 'otavio.ramos@example.com',
+      telefone: '(31) 92222-7007',
+      estagio: 'aprovado',
+      interacoes: [{ data: '2026-07-15', descricao: 'Documentação enviada; cadastro em análise pela YVYCAP.' }],
+      criadoEm: '2026-07-10',
+    },
+  ];
+
+  const resgates: SolicitacaoResgate[] = [
+    {
+      id: 'r-1',
+      contratoId: 'c-3',
+      investidorId: 'inv-2',
+      dataSolicitacao: '2026-06-10',
+      dataLiberacao: '2026-09-08',
+      status: 'pendente',
+      pagoEm: null,
+    },
+    {
+      id: 'r-2',
+      contratoId: 'c-4',
+      investidorId: 'inv-3',
+      dataSolicitacao: '2026-04-01',
+      dataLiberacao: '2026-06-30',
+      status: 'cancelado',
+      pagoEm: null,
+    },
+  ];
+
+  const documentos: Documento[] = [
+    { id: 'd-1', contratoId: 'c-1', nome: 'Contrato de mútuo CTR-0001.pdf', tipo: 'contrato_mutuo', data: '2026-01-15' },
+    { id: 'd-2', contratoId: 'c-1', nome: 'Comprovante de aporte CTR-0001.pdf', tipo: 'comprovante', data: '2026-01-15' },
+    { id: 'd-3', contratoId: 'c-2', nome: 'Contrato de mútuo CTR-0002.pdf', tipo: 'contrato_mutuo', data: '2026-04-10' },
+    { id: 'd-4', contratoId: 'c-2', nome: 'Comprovante de aporte CTR-0002.pdf', tipo: 'comprovante', data: '2026-04-11' },
+    { id: 'd-5', contratoId: 'c-3', nome: 'Contrato de mútuo CTR-0003.pdf', tipo: 'contrato_mutuo', data: '2026-02-20' },
+    { id: 'd-6', contratoId: 'c-4', nome: 'Contrato de mútuo CTR-0004.pdf', tipo: 'contrato_mutuo', data: '2026-01-05' },
+    { id: 'd-7', contratoId: 'c-6', nome: 'Contrato de mútuo CTR-0006.pdf', tipo: 'contrato_mutuo', data: '2026-03-01' },
+  ];
+
+  return {
+    usuarios,
+    parceiros,
+    investidores,
+    contratos,
+    clientes,
+    resgates,
+    documentos,
+    alteracoesCadastro: [],
+    seq: { contrato: 8, parceiro: 3, usuario: 5, resgate: 3, investidor: 7 },
+  };
+}
+
+const g = globalThis as unknown as { __yvycapDb?: Db };
+
+export function db(): Db {
+  if (!g.__yvycapDb) g.__yvycapDb = fixtures();
+  return g.__yvycapDb;
+}
