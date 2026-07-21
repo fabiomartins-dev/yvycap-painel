@@ -3,7 +3,7 @@
 import { Card, Grid, SimpleGrid, Stack, Table, Text, Title } from '@mantine/core';
 import { AnchorLink } from '@/components/AppLink';
 import { AreaChart, LineChart } from '@mantine/charts';
-import { data, moeda, percentualMes } from '@/lib/format';
+import { data, moeda, moedaCompacta, percentualMes } from '@/lib/format';
 import { PageHeader } from '@/components/PageHeader';
 import { StatCard } from '@/components/StatCard';
 import { BadgeStatus } from '@/components/BadgeStatus';
@@ -13,7 +13,7 @@ export function ParceriaScreen({ resumo }: { resumo: ResumoParceiro | null }) {
   if (!resumo) {
     return (
       <>
-        <PageHeader titulo="Parceria" migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria' }]} />
+        <PageHeader titulo="Painel do parceiro" migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria' }]} />
         <Card padding="xl">
           <Text c="#66756e" ta="center" py="lg">
             Seu credenciamento como parceiro ainda não foi concluído. Fale com a equipe YVYCAP
@@ -27,21 +27,19 @@ export function ParceriaScreen({ resumo }: { resumo: ResumoParceiro | null }) {
   return (
     <>
       <PageHeader
-        titulo="Parceria"
+        titulo="Painel do parceiro"
         descricao="Sua carteira de clientes, contratos originados e comissões."
         migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Parceria' }]}
       />
 
-      <SimpleGrid cols={{ base: 1, xs: 2, md: 5 }}>
+      <SimpleGrid cols={{ base: 1, xs: 2, md: 3 }}>
         <StatCard rotulo="Saldo ativo da carteira" valor={moeda(resumo.saldoAtivoCarteira)} destaque />
         <StatCard rotulo="Contratos ativos" valor={String(resumo.contratosAtivos)} />
-        <StatCard rotulo="Comissão do mês" valor={moeda(resumo.comissaoDoMes)} detalhe="1% do saldo ativo" />
         <StatCard
           rotulo="Próx. pagamento de comissão"
           valor={resumo.proximoPagamentoComissao ? moeda(resumo.proximoPagamentoComissao.valor) : '—'}
           detalhe={resumo.proximoPagamentoComissao ? `em ${data(resumo.proximoPagamentoComissao.data)}` : undefined}
         />
-        <StatCard rotulo="Comissão acumulada" valor={moeda(resumo.comissaoAcumulada)} />
       </SimpleGrid>
 
       <Grid gap="md" mt="md">
@@ -56,6 +54,7 @@ export function ParceriaScreen({ resumo }: { resumo: ResumoParceiro | null }) {
               dataKey="mes"
               series={[{ name: 'saldoAtivo', label: 'Saldo ativo', color: '#1b5c46' }]}
               valueFormatter={(v) => moeda(v)}
+              yAxisProps={{ width: 68, tickFormatter: (v) => moedaCompacta(v) }}
               tickLine="none"
               curveType="monotone"
             />
@@ -72,6 +71,7 @@ export function ParceriaScreen({ resumo }: { resumo: ResumoParceiro | null }) {
               dataKey="mes"
               series={[{ name: 'comissaoMensal', label: 'Comissão do mês', color: '#c8a45e' }]}
               valueFormatter={(v) => moeda(v)}
+              yAxisProps={{ width: 68, tickFormatter: (v) => moedaCompacta(v) }}
               tickLine="none"
               curveType="monotone"
             />

@@ -96,15 +96,8 @@ export default function LoginPage() {
                   </Button>
                 </Stack>
               </form>
-              <Anchor component={Link} href="/esqueci-senha" fz="sm" c="#1b5c46">
-                Esqueci minha senha
-              </Anchor>
             </Stack>
           </Card>
-          <Text c="rgba(255,255,255,0.55)" fz="xs" ta="center">
-            Ambiente de demonstração — usuários de teste: investidor@teste.com, parceiro@teste.com,
-            investidor.parceiro@teste.com, admin@teste.com (senha: yvycap2026)
-          </Text>
         </Stack>
       </Center>
     </Box>

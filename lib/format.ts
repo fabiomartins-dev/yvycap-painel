@@ -3,19 +3,19 @@ const brl = new Intl.NumberFormat('pt-BR', {
   currency: 'BRL',
 });
 
-const brlCompact = new Intl.NumberFormat('pt-BR', {
-  style: 'currency',
-  currency: 'BRL',
-  notation: 'compact',
-  maximumFractionDigits: 1,
-});
-
 export function moeda(valor: number): string {
   return brl.format(valor);
 }
 
 export function moedaCompacta(valor: number): string {
-  return brlCompact.format(valor);
+  const abs = Math.abs(valor);
+  const sinal = valor < 0 ? '-' : '';
+  const fmt = (n: number, sufixo: string) =>
+    `${sinal}R$ ${n.toLocaleString('pt-BR', { maximumFractionDigits: 1 })}${sufixo}`;
+  if (abs >= 1_000_000_000) return fmt(abs / 1_000_000_000, 'B');
+  if (abs >= 1_000_000) return fmt(abs / 1_000_000, 'M');
+  if (abs >= 1_000) return fmt(abs / 1_000, 'K');
+  return `${sinal}R$ ${abs.toLocaleString('pt-BR', { maximumFractionDigits: 0 })}`;
 }
 
 export function data(iso: string | Date): string {
