@@ -40,7 +40,14 @@ export function PerfilScreen({
               <Title order={3} fz="h4">
                 Dados cadastrais
               </Title>
-              <SolicitarAlteracao />
+              <SolicitarAlteracao
+                dados={{
+                  nome: usuario.nome,
+                  email: usuario.email,
+                  documento,
+                  telefone,
+                }}
+              />
             </Group>
             <Table variant="vertical" layout="fixed">
               <Table.Tbody>
