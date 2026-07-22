@@ -64,7 +64,7 @@ export default function LoginPage() {
     }
   }
 
-  function verificarToken() {
+  function verificarToken(token: string) {
     setErro(null);
     if (token !== TOKEN_MOCK) {
       setErro('Token inválido. Confira o código enviado por SMS e tente novamente.');
@@ -103,7 +103,7 @@ export default function LoginPage() {
                 </Text>
               </Box>
               {erro && (
-                <Alert color="red" variant="light" title="Acesso não autorizado">
+                <Alert color="red" variant="light">
                   {erro}
                 </Alert>
               )}
@@ -131,7 +131,7 @@ export default function LoginPage() {
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    verificarToken();
+                    verificarToken(token);
                   }}
                 >
                   <Stack gap="sm">
