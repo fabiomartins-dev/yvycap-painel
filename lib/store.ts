@@ -9,6 +9,7 @@ import type {
   Parceiro,
   SolicitacaoAlteracaoCadastro,
   SolicitacaoResgate,
+  SolicitacaoResgateComissao,
   Usuario,
 } from './types';
 
@@ -19,9 +20,20 @@ export interface Db {
   contratos: Contrato[];
   clientes: Cliente[];
   resgates: SolicitacaoResgate[];
+  resgatesComissao: SolicitacaoResgateComissao[];
+  /** Tokens de verificação (SMS) para resgate de comissão, por usuário. */
+  resgateComissaoTokens: Record<string, { codigo: string; expiraEm: number }>;
   documentos: Documento[];
   alteracoesCadastro: SolicitacaoAlteracaoCadastro[];
-  seq: { contrato: number; parceiro: number; usuario: number; resgate: number; investidor: number };
+  seq: {
+    contrato: number;
+    parceiro: number;
+    usuario: number;
+    resgate: number;
+    resgateComissao: number;
+    investidor: number;
+    cliente: number;
+  };
 }
 
 function fixtures(): Db {
@@ -416,9 +428,11 @@ function fixtures(): Db {
     contratos,
     clientes,
     resgates,
+    resgatesComissao: [],
+    resgateComissaoTokens: {},
     documentos,
     alteracoesCadastro: [],
-    seq: { contrato: 8, parceiro: 3, usuario: 5, resgate: 3, investidor: 7 },
+    seq: { contrato: 8, parceiro: 3, usuario: 5, resgate: 3, resgateComissao: 1, investidor: 7, cliente: 8 },
   };
 }
 
@@ -426,5 +440,12 @@ const g = globalThis as unknown as { __yvycapDb?: Db };
 
 export function db(): Db {
   if (!g.__yvycapDb) g.__yvycapDb = fixtures();
-  return g.__yvycapDb;
+  const d = g.__yvycapDb;
+  // Backfill de campos adicionados após a criação do store (o mock persiste em
+  // globalThis entre hot reloads, então instâncias antigas não têm os novos campos).
+  d.resgatesComissao ??= [];
+  d.resgateComissaoTokens ??= {};
+  d.seq.resgateComissao ??= 1;
+  d.seq.cliente ??= d.clientes.length + 1;
+  return d;
 }

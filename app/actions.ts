@@ -7,6 +7,7 @@ import { exigirPermissao, exigirSessao } from '@/lib/auth-server';
 import * as auth from '@/services/auth';
 import * as investimentos from '@/services/investimentos';
 import * as admin from '@/services/admin';
+import * as parceria from '@/services/parceria';
 import type { Permissao } from '@/lib/types';
 
 export async function acaoAceitarTermos(): Promise<void> {
@@ -25,6 +26,50 @@ export async function acaoSolicitarResgate(contratoId: string): Promise<{ ok: bo
   const r = await investimentos.solicitarResgate(sessao.userId, contratoId);
   revalidatePath('/investimentos', 'layout');
   return { ok: !!r };
+}
+
+// ————— Parceiro —————
+
+export async function acaoCriarCliente(input: parceria.NovoClienteInput): Promise<{ ok: boolean }> {
+  const { sessao } = await exigirPermissao('parceiro');
+  const c = await parceria.criarCliente(sessao.userId, input);
+  revalidatePath('/parceria', 'layout');
+  return { ok: !!c };
+}
+
+export async function acaoAtualizarCliente(
+  clienteId: string,
+  input: parceria.AtualizarClienteInput
+): Promise<{ ok: boolean }> {
+  const { sessao } = await exigirPermissao('parceiro');
+  const c = await parceria.atualizarCliente(sessao.userId, clienteId, input);
+  revalidatePath('/parceria', 'layout');
+  return { ok: !!c };
+}
+
+export async function acaoCriarContrato(input: parceria.NovoContratoInput): Promise<{ ok: boolean }> {
+  const { sessao } = await exigirPermissao('parceiro');
+  const c = await parceria.criarContrato(sessao.userId, input);
+  revalidatePath('/parceria', 'layout');
+  return { ok: !!c };
+}
+
+export async function acaoIniciarResgateComissao(
+  valor: number
+): Promise<{ ok: boolean; motivo?: string; telefoneMascarado?: string; codigoDemo?: string }> {
+  const { sessao } = await exigirPermissao('parceiro');
+  return parceria.iniciarResgateComissao(sessao.userId, valor);
+}
+
+export async function acaoConfirmarResgateComissao(
+  valor: number,
+  senha: string,
+  token: string
+): Promise<{ ok: boolean; motivo?: string }> {
+  const { sessao } = await exigirPermissao('parceiro');
+  const r = await parceria.confirmarResgateComissao(sessao.userId, valor, senha, token);
+  revalidatePath('/parceria', 'layout');
+  return r;
 }
 
 // ————— Admin —————

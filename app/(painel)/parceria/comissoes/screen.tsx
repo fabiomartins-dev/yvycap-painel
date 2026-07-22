@@ -1,18 +1,13 @@
 'use client';
 
-import { Accordion, Badge, Card, Group, SimpleGrid, Table, Text, Title } from '@mantine/core';
+import { Card, Group, SimpleGrid, Table, Text, Title } from '@mantine/core';
 import { data, moeda } from '@/lib/format';
 import { PageHeader } from '@/components/PageHeader';
+import { ButtonLink } from '@/components/AppLink';
 import { StatCard } from '@/components/StatCard';
 import { BadgeStatus } from '@/components/BadgeStatus';
+import { ExtratoTransacoes } from '@/components/parceria/ExtratoTransacoes';
 import type { ExtratoComissoes } from '@/services/parceria';
-
-const MESES_PT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-
-function nomeCompetencia(comp: string): string {
-  const [y, m] = comp.split('-').map(Number);
-  return `${MESES_PT[m - 1]} de ${y}`;
-}
 
 export function ComissoesScreen({ extrato }: { extrato: ExtratoComissoes | null }) {
   if (!extrato || extrato.meses.length === 0) {
@@ -34,81 +29,68 @@ export function ComissoesScreen({ extrato }: { extrato: ExtratoComissoes | null 
 
   return (
     <>
-      <PageHeader
-        titulo="Comissões"
-        descricao="Extrato mês a mês: entrada (1%, retenção de 30 dias), recorrentes (1% a.m.) e estornos."
-        migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Painel do Parceiro', href: '/parceria' }, { rotulo: 'Comissões' }]}
-      />
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <PageHeader
+          titulo="Comissões"
+          descricao="Extrato mês a mês: entrada (1%, retenção de 30 dias), recorrentes (1% a.m.) e estornos."
+          migalhas={[{ rotulo: 'Painel', href: '/' }, { rotulo: 'Painel do Parceiro', href: '/parceria' }, { rotulo: 'Comissões' }]}
+        />
+        <ButtonLink
+          href="/parceria/comissoes/resgatar"
+          color="gold.5"
+          c="#0c352a"
+          fw={600}
+          disabled={extrato.saldoDisponivel <= 0}
+        >
+          Solicitar resgate
+        </ButtonLink>
+      </Group>
 
-      <SimpleGrid cols={{ base: 1, xs: 2 }} mb="md">
+      <SimpleGrid cols={{ base: 1, xs: 3 }} mb="md">
         <StatCard rotulo="Total já pago" valor={moeda(extrato.totalPago)} destaque />
+        <StatCard
+          rotulo="Disponível para resgate"
+          valor={moeda(extrato.saldoDisponivel)}
+          detalhe="Comissão paga ainda não resgatada"
+        />
         <StatCard rotulo="Previsto (a pagar)" valor={moeda(extrato.totalPrevisto)} />
       </SimpleGrid>
 
+      {extrato.resgatesComissao.length > 0 && (
+        <Card mb="md">
+          <Title order={3} fz="h4" mb="sm">
+            Solicitações de resgate de comissão
+          </Title>
+          <Table.ScrollContainer minWidth={480}>
+            <Table striped>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>Solicitado em</Table.Th>
+                  <Table.Th>Valor</Table.Th>
+                  <Table.Th>Status</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {extrato.resgatesComissao.map((r) => (
+                  <Table.Tr key={r.id}>
+                    <Table.Td>{data(r.dataSolicitacao)}</Table.Td>
+                    <Table.Td fw={600}>{moeda(r.valor)}</Table.Td>
+                    <Table.Td>
+                      <BadgeStatus status={r.status} />
+                    </Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          </Table.ScrollContainer>
+        </Card>
+      )}
+
       <Card mb="md">
         <Title order={3} fz="h4" mb="sm">
-          Extrato mês a mês
+          Extrato de comissões
         </Title>
-        <Accordion variant="separated" radius="md">
-          {[...extrato.meses].reverse().map((m) => (
-            <Accordion.Item key={m.competencia} value={m.competencia} style={{ backgroundColor: '#fffdf8', borderColor: '#e5decf' }}>
-              <Accordion.Control>
-                <Group justify="space-between" wrap="nowrap" pr="sm">
-                  <Text fw={600} tt="capitalize">
-                    {nomeCompetencia(m.competencia)}
-                  </Text>
-                  <Group gap="xs" wrap="nowrap">
-                    {m.estornos < 0 && (
-                      <Badge color="red" variant="light" size="sm">
-                        Estorno
-                      </Badge>
-                    )}
-                    <Text fw={700} c={m.total < 0 ? 'red' : '#124534'}>
-                      {moeda(m.total)}
-                    </Text>
-                  </Group>
-                </Group>
-              </Accordion.Control>
-              <Accordion.Panel>
-                <Table.ScrollContainer minWidth={640}>
-                  <Table>
-                    <Table.Thead>
-                      <Table.Tr>
-                        <Table.Th>Contrato</Table.Th>
-                        <Table.Th>Tipo</Table.Th>
-                        <Table.Th>Pagamento</Table.Th>
-                        <Table.Th>Valor</Table.Th>
-                        <Table.Th>Status</Table.Th>
-                      </Table.Tr>
-                    </Table.Thead>
-                    <Table.Tbody>
-                      {m.lancamentos.map((l, i) => (
-                        <Table.Tr key={i}>
-                          <Table.Td fw={600}>{l.contratoNumero}</Table.Td>
-                          <Table.Td>
-                            <Text fz="sm" c={l.tipo === 'estorno' ? 'red' : undefined}>
-                              {l.tipo === 'entrada' ? 'Entrada (1%)' : l.tipo === 'recorrente' ? 'Recorrente (1% a.m.)' : 'Estorno'}
-                            </Text>
-                            <Text fz="xs" c="#66756e">
-                              {l.observacao}
-                            </Text>
-                          </Table.Td>
-                          <Table.Td>{data(l.dataPagamento)}</Table.Td>
-                          <Table.Td fw={600} c={l.valor < 0 ? 'red' : undefined}>
-                            {moeda(l.valor)}
-                          </Table.Td>
-                          <Table.Td>
-                            <BadgeStatus status={l.status} />
-                          </Table.Td>
-                        </Table.Tr>
-                      ))}
-                    </Table.Tbody>
-                  </Table>
-                </Table.ScrollContainer>
-              </Accordion.Panel>
-            </Accordion.Item>
-          ))}
-        </Accordion>
+        <ExtratoTransacoes lancamentos={extrato.meses.flatMap((m) => m.lancamentos)} />
       </Card>
 
       <Card>

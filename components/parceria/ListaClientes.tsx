@@ -2,9 +2,18 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Anchor, Badge, Card, Table, Text, TextInput } from '@mantine/core';
+import { ActionIcon, Anchor, Badge, Card, Table, Text, TextInput, Tooltip } from '@mantine/core';
 import { data } from '@/lib/format';
 import { ESTAGIOS_PIPELINE, type Cliente } from '@/lib/types';
+
+function IconLapis() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </svg>
+  );
+}
 
 const COR_ESTAGIO: Record<string, string> = {
   identificado: 'gray',
@@ -61,6 +70,7 @@ export function ListaClientes({ clientes }: { clientes: Cliente[] }) {
                 <Table.Th>Contato</Table.Th>
                 <Table.Th>Estágio do pipeline</Table.Th>
                 <Table.Th>Desde</Table.Th>
+                <Table.Th w={56} ta="right">Ações</Table.Th>
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
@@ -81,6 +91,19 @@ export function ListaClientes({ clientes }: { clientes: Cliente[] }) {
                     <BadgeEstagio estagio={c.estagio} />
                   </Table.Td>
                   <Table.Td>{data(c.criadoEm)}</Table.Td>
+                  <Table.Td ta="right">
+                    <Tooltip label="Editar cliente" withArrow>
+                      <ActionIcon
+                        component={Link}
+                        href={`/parceria/clientes/${c.id}/editar`}
+                        variant="subtle"
+                        color="brand.8"
+                        aria-label={`Editar ${c.nome}`}
+                      >
+                        <IconLapis />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>

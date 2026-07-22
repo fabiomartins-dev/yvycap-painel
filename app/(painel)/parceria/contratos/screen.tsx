@@ -1,7 +1,7 @@
 'use client';
 
-import { Card, Table, Text } from '@mantine/core';
-import { AnchorLink } from '@/components/AppLink';
+import { Card, Group, Table, Text } from '@mantine/core';
+import { AnchorLink, ButtonLink } from '@/components/AppLink';
 import { data, moeda } from '@/lib/format';
 import { PageHeader } from '@/components/PageHeader';
 import { BadgeStatus } from '@/components/BadgeStatus';
@@ -10,15 +10,20 @@ import type { ContratoCarteira } from '@/services/parceria';
 export function ContratosParceriaScreen({ contratos }: { contratos: ContratoCarteira[] }) {
   return (
     <>
-      <PageHeader
-        titulo="Contratos"
-        descricao="Todos os contratos originados por você, com o status de conciliação do aporte."
-        migalhas={[
-          { rotulo: 'Painel', href: '/' },
-          { rotulo: 'Painel do Parceiro', href: '/parceria' },
-          { rotulo: 'Contratos' },
-        ]}
-      />
+      <Group justify="space-between" align="flex-start" wrap="nowrap">
+        <PageHeader
+          titulo="Contratos"
+          descricao="Todos os contratos originados por você, com o status de conciliação do aporte."
+          migalhas={[
+            { rotulo: 'Painel', href: '/' },
+            { rotulo: 'Painel do Parceiro', href: '/parceria' },
+            { rotulo: 'Contratos' },
+          ]}
+        />
+        <ButtonLink href="/parceria/contratos/novo" color="gold.5" c="#0c352a" fw={600}>
+          Novo contrato
+        </ButtonLink>
+      </Group>
       <Card>
         {contratos.length === 0 ? (
           <Text c="#66756e" py="lg" ta="center">

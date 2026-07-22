@@ -2,8 +2,10 @@
 // O parceiro só enxerga a própria carteira — nunca credenciais ou conta de investidor.
 
 import {
+  APORTE_MINIMO,
   comissoesDoContrato,
   dataVencimento,
+  fasePorNumero,
   hoje,
   juroMensal,
   ROTULO_STATUS,
@@ -14,7 +16,15 @@ import {
   type LancamentoComissao,
 } from '@/lib/calc';
 import { db } from '@/lib/store';
-import type { Cliente, Contrato, SolicitacaoResgate, StatusContrato } from '@/lib/types';
+import type {
+  Cliente,
+  Contrato,
+  EstagioPipeline,
+  Investidor,
+  SolicitacaoResgate,
+  SolicitacaoResgateComissao,
+  StatusContrato,
+} from '@/lib/types';
 
 export interface ContratoCarteira {
   id: string;
@@ -66,6 +76,9 @@ export interface ExtratoComissoes {
   proximosPagamentos: LancamentoComissao[];
   totalPago: number;
   totalPrevisto: number;
+  /** Saldo já reconhecido (pago) ainda não resgatado pelo parceiro. */
+  saldoDisponivel: number;
+  resgatesComissao: SolicitacaoResgateComissao[];
 }
 
 export interface ResgateCarteira {
@@ -217,11 +230,20 @@ export async function getExtratoComissoes(userId: string): Promise<ExtratoComiss
       total: ls.reduce((s, l) => s + l.valor, 0),
       lancamentos: ls,
     }));
+  const totalPago = lanc.filter((l) => l.status === 'pago').reduce((s, l) => s + l.valor, 0);
+  const resgatesComissao = db()
+    .resgatesComissao.filter((r) => r.parceiroId === p.id)
+    .sort((a, b) => b.dataSolicitacao.localeCompare(a.dataSolicitacao));
+  const jaResgatado = resgatesComissao
+    .filter((r) => r.status !== 'cancelado')
+    .reduce((s, r) => s + r.valor, 0);
   return {
     meses,
     proximosPagamentos: lanc.filter((l) => l.status !== 'pago' && l.dataPagamento >= ref).slice(0, 12),
-    totalPago: lanc.filter((l) => l.status === 'pago').reduce((s, l) => s + l.valor, 0),
+    totalPago,
     totalPrevisto: lanc.filter((l) => l.status !== 'pago').reduce((s, l) => s + l.valor, 0),
+    saldoDisponivel: Math.max(0, totalPago - jaResgatado),
+    resgatesComissao,
   };
 }
 
@@ -244,4 +266,198 @@ export async function getResgatesCarteira(userId: string): Promise<ResgateCartei
       };
     })
     .sort((a, b) => b.dataSolicitacao.localeCompare(a.dataSolicitacao));
+}
+
+// ————— Mutações do parceiro —————
+
+export interface NovoClienteInput {
+  nome: string;
+  email: string;
+  telefone: string;
+  estagio: EstagioPipeline;
+}
+
+/** Cria um cliente na carteira do parceiro. */
+export async function criarCliente(userId: string, input: NovoClienteInput): Promise<Cliente | null> {
+  const p = parceiroDoUsuario(userId);
+  if (!p) return null;
+  const d = db();
+  const cliente: Cliente = {
+    id: `cl-${d.seq.cliente++}`,
+    parceiroId: p.id,
+    investidorId: null,
+    nome: input.nome.trim(),
+    email: input.email.trim(),
+    telefone: input.telefone.trim(),
+    estagio: input.estagio,
+    interacoes: [{ data: hoje(), descricao: 'Cliente cadastrado na carteira do parceiro.' }],
+    criadoEm: hoje(),
+  };
+  d.clientes.push(cliente);
+  return cliente;
+}
+
+export interface AtualizarClienteInput {
+  nome: string;
+  email: string;
+  telefone: string;
+  estagio: EstagioPipeline;
+}
+
+/** Atualiza os dados comerciais de um cliente da carteira do parceiro. */
+export async function atualizarCliente(
+  userId: string,
+  clienteId: string,
+  input: AtualizarClienteInput
+): Promise<Cliente | null> {
+  const p = parceiroDoUsuario(userId);
+  if (!p) return null;
+  const cliente = db().clientes.find((c) => c.id === clienteId && c.parceiroId === p.id);
+  if (!cliente) return null;
+  cliente.nome = input.nome.trim();
+  cliente.email = input.email.trim();
+  cliente.telefone = input.telefone.trim();
+  cliente.estagio = input.estagio;
+  return cliente;
+}
+
+export interface NovoContratoInput {
+  clienteId: string;
+  valorAporte: number;
+  fase: 1 | 2 | 3;
+}
+
+/**
+ * Origina um contrato para um cliente da carteira. O contrato entra como
+ * "Aguardando conciliação" — a comissão só é reconhecida após a conciliação
+ * do aporte pela YVYCAP. Se o cliente ainda não tem investidor vinculado,
+ * um cadastro de investidor é criado e associado.
+ */
+export async function criarContrato(userId: string, input: NovoContratoInput): Promise<Contrato | null> {
+  const p = parceiroDoUsuario(userId);
+  if (!p) return null;
+  const d = db();
+  const cliente = d.clientes.find((c) => c.id === input.clienteId && c.parceiroId === p.id);
+  if (!cliente) return null;
+  if (!Number.isFinite(input.valorAporte) || input.valorAporte < APORTE_MINIMO) return null;
+
+  let investidorId = cliente.investidorId;
+  if (!investidorId) {
+    const investidor: Investidor = {
+      id: `inv-${d.seq.investidor++}`,
+      usuarioId: null,
+      nome: cliente.nome,
+      email: cliente.email,
+      cpf: '',
+      telefone: cliente.telefone,
+      parceiroId: p.id,
+      cadastroAprovado: false,
+      criadoEm: hoje(),
+    };
+    d.investidores.push(investidor);
+    cliente.investidorId = investidor.id;
+    investidorId = investidor.id;
+  }
+
+  const fase = fasePorNumero(input.fase);
+  const contrato: Contrato = {
+    id: `c-${d.seq.contrato}`,
+    numero: `CTR-${String(d.seq.contrato++).padStart(4, '0')}`,
+    investidorId,
+    parceiroId: p.id,
+    fase: input.fase,
+    valorAporte: input.valorAporte,
+    taxaMensal: fase.taxaMensal,
+    dataInicio: hoje(),
+    conciliado: false,
+    dataConciliacao: null,
+    estornado: false,
+    encerradoEm: null,
+    amortizacoes: [],
+  };
+  d.contratos.push(contrato);
+
+  const ordem = ['identificado', 'qualificado', 'apresentado', 'documentacao', 'aprovado', 'contrato_assinado', 'aporte_conciliado'];
+  if (ordem.indexOf(cliente.estagio) < ordem.indexOf('contrato_assinado')) {
+    cliente.estagio = 'contrato_assinado';
+  }
+  cliente.interacoes.push({ data: hoje(), descricao: `Contrato ${contrato.numero} originado; aguardando conciliação do aporte.` });
+
+  return contrato;
+}
+
+const TOKEN_VALIDADE_MS = 10 * 60 * 1000; // 10 minutos
+
+function validarValorResgate(valor: number, disponivel: number): string | null {
+  if (disponivel <= 0) return 'Sem saldo disponível para resgate.';
+  if (!Number.isFinite(valor) || valor <= 0) return 'Valor inválido.';
+  if (valor > disponivel + 0.001) return 'Valor acima do saldo disponível.';
+  return null;
+}
+
+/**
+ * Passo 1 do resgate de comissão: valida o valor e gera um token de verificação
+ * enviado por SMS ao telefone cadastrado. No mock, o código é devolvido em
+ * `codigoDemo` para viabilizar a demonstração (não há envio real de SMS).
+ */
+export async function iniciarResgateComissao(
+  userId: string,
+  valor: number
+): Promise<{ ok: boolean; motivo?: string; telefoneMascarado?: string; codigoDemo?: string }> {
+  const p = parceiroDoUsuario(userId);
+  if (!p) return { ok: false, motivo: 'Parceiro não encontrado.' };
+  const extrato = await getExtratoComissoes(userId);
+  const disponivel = extrato?.saldoDisponivel ?? 0;
+  const erro = validarValorResgate(valor, disponivel);
+  if (erro) return { ok: false, motivo: erro };
+
+  const d = db();
+  const codigo = String(Math.floor(100000 + Math.random() * 900000));
+  d.resgateComissaoTokens[userId] = { codigo, expiraEm: Date.now() + TOKEN_VALIDADE_MS };
+
+  const tel = p.telefone.replace(/\s+/g, '');
+  const telefoneMascarado = tel.length >= 4 ? `••••${tel.slice(-4)}` : '••••';
+  return { ok: true, telefoneMascarado, codigoDemo: codigo };
+}
+
+/**
+ * Passo 2 do resgate de comissão: confirma a solicitação após validar a senha
+ * do usuário e o token (SMS) gerado no passo anterior.
+ */
+export async function confirmarResgateComissao(
+  userId: string,
+  valor: number,
+  senha: string,
+  token: string
+): Promise<{ ok: boolean; motivo?: string }> {
+  const p = parceiroDoUsuario(userId);
+  if (!p) return { ok: false, motivo: 'Parceiro não encontrado.' };
+
+  const d = db();
+  const usuario = d.usuarios.find((u) => u.id === userId);
+  if (!usuario || usuario.senha !== senha) return { ok: false, motivo: 'Senha incorreta.' };
+
+  const registro = d.resgateComissaoTokens[userId];
+  if (!registro) return { ok: false, motivo: 'Solicite um novo código de verificação.' };
+  if (Date.now() > registro.expiraEm) {
+    delete d.resgateComissaoTokens[userId];
+    return { ok: false, motivo: 'Código expirado. Solicite um novo código.' };
+  }
+  if (registro.codigo !== token.trim()) return { ok: false, motivo: 'Código de verificação inválido.' };
+
+  const extrato = await getExtratoComissoes(userId);
+  const disponivel = extrato?.saldoDisponivel ?? 0;
+  const erro = validarValorResgate(valor, disponivel);
+  if (erro) return { ok: false, motivo: erro };
+
+  d.resgatesComissao.push({
+    id: `rc-${d.seq.resgateComissao++}`,
+    parceiroId: p.id,
+    valor: Math.round(valor * 100) / 100,
+    dataSolicitacao: hoje(),
+    status: 'pendente',
+    pagoEm: null,
+  });
+  delete d.resgateComissaoTokens[userId];
+  return { ok: true };
 }

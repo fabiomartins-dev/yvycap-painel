@@ -126,6 +126,17 @@ export interface SolicitacaoResgate {
   pagoEm: string | null;
 }
 
+export type StatusResgateComissao = 'pendente' | 'pago' | 'cancelado';
+
+export interface SolicitacaoResgateComissao {
+  id: string;
+  parceiroId: string;
+  valor: number;
+  dataSolicitacao: string;
+  status: StatusResgateComissao;
+  pagoEm: string | null;
+}
+
 export interface Documento {
   id: string;
   contratoId: string;
